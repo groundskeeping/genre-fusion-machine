@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Genre Fusion Machine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #fefefe;
+            color: #000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .logo {
+            margin: 20px 0 40px 0;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .container {
+            background: #fefefe;
+            border: 3px solid #000;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+
+        .stats {
+            background: #f5f5f5;
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .generate-btn {
+            background: #000;
+            color: #fff;
+            border: 3px solid #000;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .generate-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .generate-btn:disabled {
+            background: #666;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .slot-machine {
+            border: 2px solid #000;
+            background: #fff;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            position: relative;
+        }
+
+        .slot-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slot-display {
+            font-size: 20px;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #333;
+            background: #f9f9f9;
+            width: 100%;
+            max-width: 250px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #000;
+        }
+
+        .slot-display:hover {
+            font-weight: 900;
+            border: 2px solid #000;
+            background: #fff;
+        }
+
+        .slot-display.inactive {
+            cursor: default;
+        }
+
+        .slot-display.inactive:hover {
+            font-weight: bold;
+            border: 1px solid #333;
+            background: #f9f9f9;
+        }
+
+        .slot-spinning {
+            animation: flicker 0.1s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 50% { opacity: 1; }
+            25%, 75% { opacity: 0.3; }
+        }
+
+        .plus-sign {
+            font-size: 36px;
+            color: #333;
+            margin: 0 20px;
+            align-self: center;
+        }
+
+        .instructions {
+            background: #f5f5f5;
+            border: 1px solid #333;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #000;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .instructions p {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+
+        .visible {
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Confetti Animation */
+        .confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: confetti-fall 2s ease-out forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(400px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .confetti:nth-child(1) { background: #ff6b6b; left: 10%; animation-delay: 0s; }
+        .confetti:nth-child(2) { background: #4ecdc4; left: 20%; animation-delay: 0.1s; }
+        .confetti:nth-child(3) { background: #45b7d1; left: 30%; animation-delay: 0.2s; }
+        .confetti:nth-child(4) { background: #96ceb4; left: 40%; animation-delay: 0.1s; }
+        .confetti:nth-child(5) { background: #ffeaa7; left: 50%; animation-delay: 0s; }
+        .confetti:nth-child(6) { background: #dda0dd; left: 60%; animation-delay: 0.2s; }
+        .confetti:nth-child(7) { background: #98d8c8; left: 70%; animation-delay: 0.1s; }
+        .confetti:nth-child(8) { background: #f7dc6f; left: 80%; animation-delay: 0.3s; }
+        .confetti:nth-child(9) { background: #bb8fce; left: 90%; animation-delay: 0.2s; }
+        .confetti:nth-child(10) { background: #82e0aa; left: 15%; animation-delay: 0.4s; }
+        .confetti:nth-child(11) { background: #f8c471; left: 25%; animation-delay: 0.3s; }
+        .confetti:nth-child(12) { background: #85c1e9; left: 35%; animation-delay: 0.5s; }
+        .confetti:nth-child(13) { background: #f1948a; left: 45%; animation-delay: 0.4s; }
+        .confetti:nth-child(14) { background: #d7bde2; left: 55%; animation-delay: 0.3s; }
+        .confetti:nth-child(15) { background: #a9dfbf; left: 65%; animation-delay: 0.5s; }
+        .confetti:nth-child(16) { background: #f9e79f; left: 75%; animation-delay: 0.4s; }
+        .confetti:nth-child(17) { background: #aed6f1; left: 85%; animation-delay: 0.6s; }
+        .confetti:nth-child(18) { background: #f5b7b1; left: 95%; animation-delay: 0.5s; }
+        .confetti:nth-child(19) { background: #c39bd3; left: 5%; animation-delay: 0.7s; }
+        .confetti:nth-child(20) { background: #7fb3d3; left: 12%; animation-delay: 0.6s; }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .slot-machine {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .plus-sign {
+                margin: 10px 0;
+                transform: rotate(90deg);
+            }
+            
+            .slot-display {
+                font-size: 16px;
+                max-width: 200px;
+            }
+            
+            .genre-links {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .logo {
+                margin: 10px 0 20px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <h1 style="font-family: 'Courier New', monospace; font-size: 2.5em; font-weight: bold; margin: 0; padding: 20px 0; color: #000; text-align: center;">THE GENRE FUSION MACHINE</h1>
+    </div>CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJ
+
+    <div class="container">
+        <div class="confetti-container" id="confettiContainer"></div>
+        
+        <div class="stats">
+            <strong>500+ GENRES</strong> FROM RATEYOURMUSIC DATABASE<br>
+            ROCK • ELECTRONIC • HIP HOP • JAZZ • FOLK • METAL • EXPERIMENTAL • WORLD
+        </div>
+        
+        <button class="generate-btn" id="generateBtn" onclick="startSlotMachine()">SPIN THE MACHINE</button>
+        
+        <div class="slot-machine">
+            <div class="slot-container">
+                <a href="#" class="slot-display inactive" id="genre1Display">???</a>
+            </div>
+            <div class="plus-sign">+</div>
+            <div class="slot-container">
+                <a href="#" class="slot-display inactive" id="genre2Display">???</a>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>INSTRUCTIONS:</h3>
+            <p>CLICK "SPIN THE MACHINE" TO GENERATE A RANDOM FUSION OF TWO MUSIC GENRES.</p>
+            <p>YOUR MISSION: CREATE A SONG THAT COMBINES BOTH STYLES.</p>
+            <p>CLICK ON EACH GENRE BOX TO RESEARCH THAT STYLE ON RATEYOURMUSIC.</p>
+            <p>SOME COMBINATIONS WILL BE WILD - THAT'S THE POINT. PUSH YOUR BOUNDARIES.</p>
+        </div>
+    </div>
+
+    <script>
+        // Same comprehensive genre database
+        const genres = [
+            // ROCK & ITS SUBGENRES
+            { name: "Alternative Rock", url: "alternative+rock" },
+            { name: "Indie Rock", url: "indie+rock" },
+            { name: "Post-Rock", url: "post-rock" },
+            { name: "Prog Rock", url: "prog+rock" },
+            { name: "Art Rock", url: "art+rock" },
+            { name: "Krautrock", url: "krautrock" },
+            { name: "Math Rock", url: "math+rock" },
+            { name: "Noise Rock", url: "noise+rock" },
+            { name: "Post-Punk", url: "post-punk" },
+            { name: "Garage Rock", url: "garage+rock" },
+            { name: "Psychedelic Rock", url: "psychedelic+rock" },
+            { name: "Shoegaze", url: "shoegaze" },
+            { name: "Dream Pop", url: "dream+pop" },
+            { name: "Slowcore", url: "slowcore" },
+            { name: "Sadcore", url: "sadcore" },
+            { name: "Lo-Fi Indie", url: "lo-fi+indie" },
+            { name: "Chamber Pop", url: "chamber+pop" },
+            { name: "Jangle Pop", url: "jangle+pop" },
+            { name: "New Wave", url: "new+wave" },
+            { name: "Post-Punk Revival", url: "post-punk+revival" },
+            { name: "Grunge", url: "grunge" },
+            { name: "Britpop", url: "britpop" },
+            { name: "Madchester", url: "madchester" },
+            { name: "C86", url: "c86" },
+            { name: "Twee Pop", url: "twee+pop" },
+            { name: "Cuddlecore", url: "cuddlecore" },
+            { name: "Riot Grrrl", url: "riot+grrrl" },
+            { name: "Emo", url: "emo" },
+            { name: "Screamo", url: "screamo" },
+            { name: "Emocore", url: "emocore" },
+            { name: "Post-Hardcore", url: "post-hardcore" },
+            { name: "Mathcore", url: "mathcore" },
+            { name: "Experimental Rock", url: "experimental+rock" },
+            { name: "Progressive Electronic", url: "progressive+electronic" },
+            { name: "Space Rock", url: "space+rock" },
+            { name: "Stoner Rock", url: "stoner+rock" },
+            { name: "Desert Rock", url: "desert+rock" },
+            { name: "Surf Rock", url: "surf+rock" },
+            { name: "Rockabilly", url: "rockabilly" },
+            { name: "Pub Rock", url: "pub+rock" },
+            { name: "Power Pop", url: "power+pop" },
+            { name: "Jock Rock", url: "jock+rock" },
+            { name: "Arena Rock", url: "arena+rock" },
+            { name: "Southern Rock", url: "southern+rock" },
+            { name: "Heartland Rock", url: "heartland+rock" },
+
+            // METAL & HEAVY
+            { name: "Black Metal", url: "black+metal" },
+            { name: "Death Metal", url: "death+metal" },
+            { name: "Doom Metal", url: "doom+metal" },
+            { name: "Funeral Doom", url: "funeral+doom" },
+            { name: "Sludge Metal", url: "sludge+metal" },
+            { name: "Post-Metal", url: "post-metal" },
+            { name: "Atmospheric Black Metal", url: "atmospheric+black+metal" },
+            { name: "Blackgaze", url: "blackgaze" },
+            { name: "Depressive Black Metal", url: "depressive+black+metal" },
+            { name: "Melodic Black Metal", url: "melodic+black+metal" },
+            { name: "Symphonic Black Metal", url: "symphonic+black+metal" },
+            { name: "Technical Death Metal", url: "technical+death+metal" },
+            { name: "Brutal Death Metal", url: "brutal+death+metal" },
+            { name: "Melodic Death Metal", url: "melodic+death+metal" },
+            { name: "Progressive Death Metal", url: "progressive+death+metal" },
+            { name: "Deathcore", url: "deathcore" },
+            { name: "Metalcore", url: "metalcore" },
+            { name: "Djent", url: "djent" },
+            { name: "Progressive Metal", url: "progressive+metal" },
+            { name: "Power Metal", url: "power+metal" },
+            { name: "Symphonic Metal", url: "symphonic+metal" },
+            { name: "Gothic Metal", url: "gothic+metal" },
+            { name: "Industrial Metal", url: "industrial+metal" },
+            { name: "Nu Metal", url: "nu+metal" },
+            { name: "Rap Metal", url: "rap+metal" },
+            { name: "Funk Metal", url: "funk+metal" },
+            { name: "Thrash Metal", url: "thrash+metal" },
+            { name: "Speed Metal", url: "speed+metal" },
+            { name: "Heavy Metal", url: "heavy+metal" },
+            { name: "NWOBHM", url: "nwobhm" },
+            { name: "Drone Metal", url: "drone+metal" },
+            { name: "Grindcore", url: "grindcore" },
+            { name: "Goregrind", url: "goregrind" },
+            { name: "Powerviolence", url: "powerviolence" },
+            { name: "Crust Punk", url: "crust+punk" },
+            { name: "Sludgecore", url: "sludgecore" },
+
+            // ELECTRONIC & DANCE
+            { name: "Ambient", url: "ambient" },
+            { name: "Dark Ambient", url: "dark+ambient" },
+            { name: "Drone", url: "drone" },
+            { name: "Musique Concrète", url: "musique+concrete" },
+            { name: "Electroacoustic", url: "electroacoustic" },
+            { name: "Sound Collage", url: "sound+collage" },
+            { name: "Field Recording", url: "field+recording" },
+            { name: "Lowercase", url: "lowercase" },
+            { name: "Microsound", url: "microsound" },
+            { name: "Glitch", url: "glitch" },
+            { name: "IDM", url: "idm" },
+            { name: "Braindance", url: "braindance" },
+            { name: "Breakcore", url: "breakcore" },
+            { name: "Digital Hardcore", url: "digital+hardcore" },
+            { name: "Speedcore", url: "speedcore" },
+            { name: "Gabber", url: "gabber" },
+            { name: "Hardcore Techno", url: "hardcore+techno" },
+            { name: "Frenchcore", url: "frenchcore" },
+            { name: "UK Hardcore", url: "uk+hardcore" },
+            { name: "Happy Hardcore", url: "happy+hardcore" },
+            { name: "Techno", url: "techno" },
+            { name: "Minimal Techno", url: "minimal+techno" },
+            { name: "Acid Techno", url: "acid+techno" },
+            { name: "Detroit Techno", url: "detroit+techno" },
+            { name: "Industrial Techno", url: "industrial+techno" },
+            { name: "Dub Techno", url: "dub+techno" },
+            { name: "House", url: "house" },
+            { name: "Deep House", url: "deep+house" },
+            { name: "Tech House", url: "tech+house" },
+            { name: "Progressive House", url: "progressive+house" },
+            { name: "Tribal House", url: "tribal+house" },
+            { name: "Acid House", url: "acid+house" },
+            { name: "Chicago House", url: "chicago+house" },
+            { name: "French House", url: "french+house" },
+            { name: "Microhouse", url: "microhouse" },
+            { name: "Electro House", url: "electro+house" },
+            { name: "Big Room House", url: "big+room+house" },
+            { name: "Future House", url: "future+house" },
+            { name: "Bass House", url: "bass+house" },
+            { name: "UK Garage", url: "uk+garage" },
+            { name: "2-Step", url: "2-step" },
+            { name: "Future Garage", url: "future+garage" },
+            { name: "Dubstep", url: "dubstep" },
+            { name: "Brostep", url: "brostep" },
+            { name: "Melodic Dubstep", url: "melodic+dubstep" },
+            { name: "Deathstep", url: "deathstep" },
+            { name: "Riddim", url: "riddim" },
+            { name: "Drum and Bass", url: "drum+and+bass" },
+            { name: "Liquid Funk", url: "liquid+funk" },
+            { name: "Neurofunk", url: "neurofunk" },
+            { name: "Jump-Up", url: "jump-up" },
+            { name: "Hardstep", url: "hardstep" },
+            { name: "Darkstep", url: "darkstep" },
+            { name: "Jungle", url: "jungle" },
+            { name: "Ragga Jungle", url: "ragga+jungle" },
+            { name: "Intelligent Jungle", url: "intelligent+jungle" },
+            { name: "Breakbeat", url: "breakbeat" },
+            { name: "Big Beat", url: "big+beat" },
+            { name: "Nu Skool Breaks", url: "nu+skool+breaks" },
+            { name: "Trance", url: "trance" },
+            { name: "Progressive Trance", url: "progressive+trance" },
+            { name: "Uplifting Trance", url: "uplifting+trance" },
+            { name: "Psytrance", url: "psytrance" },
+            { name: "Full-On", url: "full-on" },
+            { name: "Dark Psytrance", url: "dark+psytrance" },
+            { name: "Forest Psytrance", url: "forest+psytrance" },
+            { name: "Goa Trance", url: "goa+trance" },
+            { name: "Hardtrance", url: "hardtrance" },
+            { name: "Eurotrance", url: "eurotrance" },
+            { name: "Vocal Trance", url: "vocal+trance" },
+            { name: "Acid Trance", url: "acid+trance" },
+            { name: "Synthwave", url: "synthwave" },
+            { name: "Retrowave", url: "retrowave" },
+            { name: "Darksynth", url: "darksynth" },
+            { name: "Outrun", url: "outrun" },
+            { name: "Cyberpunk", url: "cyberpunk" },
+            { name: "Vaporwave", url: "vaporwave" },
+            { name: "Future Funk", url: "future+funk" },
+            { name: "Mallsoft", url: "mallsoft" },
+            { name: "Hardstyle", url: "hardstyle" },
+            { name: "Rawstyle", url: "rawstyle" },
+            { name: "Euphoric Hardstyle", url: "euphoric+hardstyle" },
+            { name: "Terror", url: "terror" },
+            { name: "Uptempo", url: "uptempo" },
+            { name: "Industrial", url: "industrial" },
+            { name: "Power Electronics", url: "power+electronics" },
+            { name: "Harsh Noise Wall", url: "harsh+noise+wall" },
+            { name: "Harsh Noise", url: "harsh+noise" },
+            { name: "Japanoise", url: "japanoise" },
+            { name: "Death Industrial", url: "death+industrial" },
+            { name: "Dark Electro", url: "dark+electro" },
+            { name: "Aggrotech", url: "aggrotech" },
+            { name: "Futurepop", url: "futurepop" },
+            { name: "Synthpop", url: "synthpop" },
+            { name: "Electropop", url: "electropop" },
+            { name: "Chillwave", url: "chillwave" },
+            { name: "Witch House", url: "witch+house" },
+            { name: "Seapunk", url: "seapunk" },
+            { name: "Future Bass", url: "future+bass" },
+            { name: "Trap", url: "trap" },
+            { name: "Jersey Club", url: "jersey+club" },
+            { name: "Footwork", url: "footwork" },
+            { name: "Juke", url: "juke" },
+            { name: "Grime", url: "grime" },
+            { name: "UK Drill", url: "uk+drill" },
+            { name: "Phonk", url: "phonk" },
+            { name: "Memphis Rap", url: "memphis+rap" },
+            { name: "Cloud Rap", url: "cloud+rap" },
+            { name: "Vaporwave Rap", url: "vaporwave+rap" },
+
+            // HIP HOP & RAP
+            { name: "Hip Hop", url: "hip+hop" },
+            { name: "Conscious Hip Hop", url: "conscious+hip+hop" },
+            { name: "Gangsta Rap", url: "gangsta+rap" },
+            { name: "Hardcore Hip Hop", url: "hardcore+hip+hop" },
+            { name: "East Coast Hip Hop", url: "east+coast+hip+hop" },
+            { name: "West Coast Hip Hop", url: "west+coast+hip+hop" },
+            { name: "Southern Hip Hop", url: "southern+hip+hop" },
+            { name: "Midwest Hip Hop", url: "midwest+hip+hop" },
+            { name: "Alternative Hip Hop", url: "alternative+hip+hop" },
+            { name: "Experimental Hip Hop", url: "experimental+hip+hop" },
+            { name: "Abstract Hip Hop", url: "abstract+hip+hop" },
+            { name: "Jazz Rap", url: "jazz+rap" },
+            { name: "Lo-Fi Hip Hop", url: "lo-fi+hip+hop" },
+            { name: "Boom Bap", url: "boom+bap" },
+            { name: "G-Funk", url: "g-funk" },
+            { name: "Crunk", url: "crunk" },
+            { name: "Hyphy", url: "hyphy" },
+            { name: "Horrorcore", url: "horrorcore" },
+            { name: "Nerdcore", url: "nerdcore" },
+            { name: "Christian Hip Hop", url: "christian+hip+hop" },
+            { name: "Industrial Hip Hop", url: "industrial+hip+hop" },
+            { name: "Turntablism", url: "turntablism" },
+            { name: "Breakbeat Hip Hop", url: "breakbeat+hip+hop" },
+            { name: "Electro Rap", url: "electro+rap" },
+            { name: "Miami Bass", url: "miami+bass" },
+            { name: "New Jack Swing", url: "new+jack+swing" },
+            { name: "Old School Hip Hop", url: "old+school+hip+hop" },
+            { name: "Golden Age Hip Hop", url: "golden+age+hip+hop" },
+            { name: "Emo Rap", url: "emo+rap" },
+            { name: "Mumble Rap", url: "mumble+rap" },
+            { name: "Drill", url: "drill" },
+            { name: "Chicago Drill", url: "chicago+drill" },
+            { name: "Reggaeton", url: "reggaeton" },
+            { name: "Latin Trap", url: "latin+trap" },
+
+            // JAZZ & BLUES
+            { name: "Jazz", url: "jazz" },
+            { name: "Bebop", url: "bebop" },
+            { name: "Hard Bop", url: "hard+bop" },
+            { name: "Cool Jazz", url: "cool+jazz" },
+            { name: "Free Jazz", url: "free+jazz" },
+            { name: "Avant-Garde Jazz", url: "avant-garde+jazz" },
+            { name: "Post-Bop", url: "post-bop" },
+            { name: "Fusion", url: "fusion" },
+            { name: "Jazz Funk", url: "jazz+funk" },
+            { name: "Smooth Jazz", url: "smooth+jazz" },
+            { name: "Acid Jazz", url: "acid+jazz" },
+            { name: "Nu Jazz", url: "nu+jazz" },
+            { name: "Jazz-Rock", url: "jazz-rock" },
+            { name: "Modal Jazz", url: "modal+jazz" },
+            { name: "Swing", url: "swing" },
+            { name: "Big Band", url: "big+band" },
+            { name: "Dixieland", url: "dixieland" },
+            { name: "Ragtime", url: "ragtime" },
+            { name: "Stride", url: "stride" },
+            { name: "Gypsy Jazz", url: "gypsy+jazz" },
+            { name: "Latin Jazz", url: "latin+jazz" },
+            { name: "Afro-Cuban Jazz", url: "afro-cuban+jazz" },
+            { name: "Brazilian Jazz", url: "brazilian+jazz" },
+            { name: "Bossa Nova", url: "bossa+nova" },
+            { name: "Samba Jazz", url: "samba+jazz" },
+            { name: "Blues", url: "blues" },
+            { name: "Delta Blues", url: "delta+blues" },
+            { name: "Chicago Blues", url: "chicago+blues" },
+            { name: "Electric Blues", url: "electric+blues" },
+            { name: "Blues Rock", url: "blues+rock" },
+            { name: "Country Blues", url: "country+blues" },
+            { name: "Piedmont Blues", url: "piedmont+blues" },
+            { name: "Jump Blues", url: "jump+blues" },
+            { name: "Rhythm and Blues", url: "rhythm+and+blues" },
+            { name: "Soul", url: "soul" },
+            { name: "Neo Soul", url: "neo+soul" },
+            { name: "Northern Soul", url: "northern+soul" },
+            { name: "Southern Soul", url: "southern+soul" },
+            { name: "Motown", url: "motown" },
+            { name: "Philadelphia Soul", url: "philadelphia+soul" },
+            { name: "Funk", url: "funk" },
+            { name: "P-Funk", url: "p-funk" },
+            { name: "Disco", url: "disco" },
+            { name: "Nu-Disco", url: "nu-disco" },
+            { name: "Italo Disco", url: "italo+disco" },
+            { name: "Euro Disco", url: "euro+disco" },
+            { name: "Hi-NRG", url: "hi-nrg" },
+
+            // FOLK & TRADITIONAL
+            { name: "Folk", url: "folk" },
+            { name: "Contemporary Folk", url: "contemporary+folk" },
+            { name: "Indie Folk", url: "indie+folk" },
+            { name: "Anti-Folk", url: "anti-folk" },
+            { name: "Freak Folk", url: "freak+folk" },
+            { name: "Psychedelic Folk", url: "psychedelic+folk" },
+            { name: "Folk Rock", url: "folk+rock" },
+            { name: "Folk Punk", url: "folk+punk" },
+            { name: "Celtic Folk", url: "celtic+folk" },
+            { name: "Appalachian Folk", url: "appalachian+folk" },
+            { name: "Americana", url: "americana" },
+            { name: "Alt-Country", url: "alt-country" },
+            { name: "Country", url: "country" },
+            { name: "Bluegrass", url: "bluegrass" },
+            { name: "Progressive Bluegrass", url: "progressive+bluegrass" },
+            { name: "Newgrass", url: "newgrass" },
+            { name: "Old-Time", url: "old-time" },
+            { name: "Outlaw Country", url: "outlaw+country" },
+            { name: "Honky Tonk", url: "honky+tonk" },
+            { name: "Western Swing", url: "western+swing" },
+            { name: "Country Pop", url: "country+pop" },
+            { name: "Country Rock", url: "country+rock" },
+            { name: "Southern Gothic", url: "southern+gothic" },
+            { name: "Dark Country", url: "dark+country" },
+            { name: "Cowpunk", url: "cowpunk" },
+            { name: "Neofolk", url: "neofolk" },
+            { name: "Martial Industrial", url: "martial+industrial" },
+            { name: "Apocalyptic Folk", url: "apocalyptic+folk" },
+            { name: "Dark Folk", url: "dark+folk" },
+            { name: "Chamber Folk", url: "chamber+folk" },
+            { name: "Baroque Folk", url: "baroque+folk" },
+            { name: "Orchestral Folk", url: "orchestral+folk" },
+
+            // POP & MAINSTREAM
+            { name: "Pop", url: "pop" },
+            { name: "Electropop", url: "electropop" },
+            { name: "Synthpop", url: "synthpop" },
+            { name: "Dance-Pop", url: "dance-pop" },
+            { name: "Teen Pop", url: "teen+pop" },
+            { name: "Bubblegum Pop", url: "bubblegum+pop" },
+            { name: "Art Pop", url: "art+pop" },
+            { name: "Avant-Pop", url: "avant-pop" },
+            { name: "Experimental Pop", url: "experimental+pop" },
+            { name: "Indie Pop", url: "indie+pop" },
+            { name: "Bedroom Pop", url: "bedroom+pop" },
+            { name: "Hypnagogic Pop", url: "hypnagogic+pop" },
+            { name: "K-Pop", url: "k-pop" },
+            { name: "J-Pop", url: "j-pop" },
+            { name: "Europop", url: "europop" },
+            { name: "Sophisti-Pop", url: "sophisti-pop" },
+            { name: "New Romantic", url: "new+romantic" },
+            { name: "Post-Disco", url: "post-disco" },
+            { name: "Sunshine Pop", url: "sunshine+pop" },
+            { name: "Psychedelic Pop", url: "psychedelic+pop" },
+            { name: "Neo-Psychedelia", url: "neo-psychedelia" },
+            { name: "Paisley Underground", url: "paisley+underground" },
+            { name: "Noise Pop", url: "noise+pop" },
+            { name: "C-Pop", url: "c-pop" },
+            { name: "Latin Pop", url: "latin+pop" },
+            { name: "Tropical House", url: "tropical+house" },
+            { name: "PC Music", url: "pc+music" },
+            { name: "Hyperpop", url: "hyperpop" },
+            { name: "Nightcore", url: "nightcore" },
+            { name: "Future Pop", url: "future+pop" },
+
+            // PUNK & HARDCORE
+            { name: "Punk Rock", url: "punk+rock" },
+            { name: "Hardcore Punk", url: "hardcore+punk" },
+            { name: "Straight Edge", url: "straight+edge" },
+            { name: "Youth Crew", url: "youth+crew" },
+            { name: "Melodic Hardcore", url: "melodic+hardcore" },
+            { name: "Crossover Thrash", url: "crossover+thrash" },
+            { name: "Thrashcore", url: "thrashcore" },
+            { name: "Fastcore", url: "fastcore" },
+            { name: "Skate Punk", url: "skate+punk" },
+            { name: "Pop Punk", url: "pop+punk" },
+            { name: "Easycore", url: "easycore" },
+            { name: "Ska Punk", url: "ska+punk" },
+            { name: "Celtic Punk", url: "celtic+punk" },
+            { name: "Horror Punk", url: "horror+punk" },
+            { name: "Psychobilly", url: "psychobilly" },
+            { name: "Gothabilly", url: "gothabilly" },
+            { name: "Garage Punk", url: "garage+punk" },
+            { name: "Surf Punk", url: "surf+punk" },
+            { name: "Art Punk", url: "art+punk" },
+            { name: "No Wave", url: "no+wave" },
+            { name: "Deathrock", url: "deathrock" },
+            { name: "Anarcho-Punk", url: "anarcho-punk" },
+            { name: "Peace Punk", url: "peace+punk" },
+            { name: "Oi!", url: "oi" },
+            { name: "Street Punk", url: "street+punk" },
+            { name: "D-Beat", url: "d-beat" },
+            { name: "Crust Punk", url: "crust+punk" },
+            { name: "Grindcore", url: "grindcore" },
+            { name: "Powerviolence", url: "powerviolence" },
+            { name: "Fastcore", url: "fastcore" },
+            { name: "Mincecore", url: "mincecore" },
+            { name: "Noisecore", url: "noisecore" },
+            { name: "Queercore", url: "queercore" },
+            { name: "Homocore", url: "homocore" },
+            { name: "Dykecore", url: "dykecore" },
+
+            // EXPERIMENTAL & AVANT-GARDE
+            { name: "Experimental", url: "experimental" },
+            { name: "Avant-Garde", url: "avant-garde" },
+            { name: "Sound Art", url: "sound+art" },
+            { name: "Acousmatic", url: "acousmatic" },
+            { name: "Electroacoustic Improvisation", url: "electroacoustic+improvisation" },
+            { name: "Free Improvisation", url: "free+improvisation" },
+            { name: "Extended Technique", url: "extended+technique" },
+            { name: "Prepared Piano", url: "prepared+piano" },
+            { name: "Graphic Notation", url: "graphic+notation" },
+            { name: "Aleatoric", url: "aleatoric" },
+            { name: "Serialism", url: "serialism" },
+            { name: "Twelve-Tone", url: "twelve-tone" },
+            { name: "Minimalism", url: "minimalism" },
+            { name: "Process Music", url: "process+music" },
+            { name: "Spectral Music", url: "spectral+music" },
+            { name: "Microsound", url: "microsound" },
+            { name: "Reductionism", url: "reductionism" },
+            { name: "Onkyo", url: "onkyo" },
+            { name: "Wandelweiser", url: "wandelweiser" },
+            { name: "New Complexity", url: "new+complexity" },
+            { name: "Totalism", url: "totalism" },
+            { name: "Bang on a Can", url: "bang+on+a+can" },
+            { name: "Post-Classical", url: "post-classical" },
+            { name: "Neo-Classical", url: "neo-classical" },
+            { name: "Modern Classical", url: "modern+classical" },
+            { name: "Contemporary Classical", url: "contemporary+classical" },
+            { name: "21st Century Classical", url: "21st+century+classical" },
+            { name: "New Music", url: "new+music" },
+            { name: "Composition", url: "composition" },
+
+            // REGGAE & CARIBBEAN
+            { name: "Reggae", url: "reggae" },
+            { name: "Roots Reggae", url: "roots+reggae" },
+            { name: "Dancehall", url: "dancehall" },
+            { name: "Ragga", url: "ragga" },
+            { name: "Dub", url: "dub" },
+            { name: "Ska", url: "ska" },
+            { name: "Two Tone", url: "two+tone" },
+            { name: "Third Wave Ska", url: "third+wave+ska" },
+            { name: "Rocksteady", url: "rocksteady" },
+            { name: "Mento", url: "mento" },
+            { name: "Calypso", url: "calypso" },
+            { name: "Soca", url: "soca" },
+            { name: "Zouk", url: "zouk" },
+            { name: "Kompa", url: "kompa" },
+            { name: "Merengue", url: "merengue" },
+            { name: "Bachata", url: "bachata" },
+            { name: "Salsa", url: "salsa" },
+            { name: "Mambo", url: "mambo" },
+            { name: "Cha-Cha-Cha", url: "cha-cha-cha" },
+            { name: "Son Cubano", url: "son+cubano" },
+            { name: "Rumba", url: "rumba" },
+            { name: "Bolero", url: "bolero" },
+            { name: "Beguine", url: "beguine" },
+            { name: "Steel Drum", url: "steel+drum" },
+
+            // WORLD & ETHNIC
+            { name: "Afrobeat", url: "afrobeat" },
+            { name: "Highlife", url: "highlife" },
+            { name: "Soukous", url: "soukous" },
+            { name: "Makossa", url: "makossa" },
+            { name: "Mbaqanga", url: "mbaqanga" },
+            { name: "Isicathamiya", url: "isicathamiya" },
+            { name: "Qawwali", url: "qawwali" },
+            { name: "Raï", url: "rai" },
+            { name: "Gnawa", url: "gnawa" },
+            { name: "Fado", url: "fado" },
+            { name: "Flamenco", url: "flamenco" },
+            { name: "Tango", url: "tango" },
+            { name: "Cumbia", url: "cumbia" },
+            { name: "Vallenato", url: "vallenato" },
+            { name: "Mariachi", url: "mariachi" },
+            { name: "Ranchera", url: "ranchera" },
+            { name: "Norteño", url: "norteno" },
+            { name: "Tejano", url: "tejano" },
+            { name: "Conjunto", url: "conjunto" },
+            { name: "Banda", url: "banda" },
+            { name: "Regional Mexican", url: "regional+mexican" },
+            { name: "Klezmer", url: "klezmer" },
+            { name: "Romani", url: "romani" },
+            { name: "Balkan", url: "balkan" },
+            { name: "Rebetiko", url: "rebetiko" },
+            { name: "Laïkó", url: "laiko" },
+            { name: "Enka", url: "enka" },
+            { name: "Gagaku", url: "gagaku" },
+            { name: "Gamelan", url: "gamelan" },
+            { name: "Raga", url: "raga" },
+            { name: "Carnatic", url: "carnatic" },
+            { name: "Hindustani", url: "hindustani" },
+            { name: "Bhangra", url: "bhangra" },
+            { name: "Bollywood", url: "bollywood" },
+            { name: "Chinese Opera", url: "chinese+opera" },
+            { name: "Pansori", url: "pansori" },
+            { name: "Aboriginal", url: "aboriginal" },
+            { name: "Native American", url: "native+american" },
+            { name: "Throat Singing", url: "throat+singing" },
+
+            // GOTHIC & DARKWAVE
+            { name: "Gothic Rock", url: "gothic+rock" },
+            { name: "Darkwave", url: "darkwave" },
+            { name: "Coldwave", url: "coldwave" },
+            { name: "Minimal Wave", url: "minimal+wave" },
+            { name: "Dark Electro", url: "dark+electro" },
+            { name: "EBM", url: "ebm" },
+            { name: "Dark Ambient", url: "dark+ambient" },
+            { name: "Neoclassical Darkwave", url: "neoclassical+darkwave" },
+            { name: "Ethereal Wave", url: "ethereal+wave" },
+            { name: "Heavenly Voices", url: "heavenly+voices" },
+
+            // SPECIAL CATEGORIES
+            { name: "Outsider Music", url: "outsider+music" },
+            { name: "Novelty", url: "novelty" },
+            { name: "Comedy", url: "comedy" },
+            { name: "Spoken Word", url: "spoken+word" },
+            { name: "Poetry", url: "poetry" },
+            { name: "Audiobook", url: "audiobook" },
+            { name: "Field Recording", url: "field+recording" },
+            { name: "Sound Effects", url: "sound+effects" },
+            { name: "Silence", url: "silence" },
+            { name: "Lowercase", url: "lowercase" },
+            { name: "Children's Music", url: "childrens+music" },
+            { name: "Lullaby", url: "lullaby" },
+            { name: "Christmas Music", url: "christmas+music" },
+            { name: "Holiday Music", url: "holiday+music" },
+            { name: "Soundtrack", url: "soundtrack" },
+            { name: "Film Score", url: "film+score" },
+            { name: "Video Game Music", url: "video+game+music" },
+            { name: "Chiptune", url: "chiptune" },
+            { name: "8-Bit", url: "8-bit" },
+            { name: "16-Bit", url: "16-bit" },
+            { name: "Bitpop", url: "bitpop" },
+            { name: "Game Boy", url: "game+boy" },
+            { name: "FamiTracker", url: "famitracker" },
+            { name: "LSDJ", url: "lsdj" },
+            { name: "Tracker", url: "tracker" },
+            { name: "MOD", url: "mod" },
+            { name: "S3M", url: "s3m" },
+            { name: "XM", url: "xm" },
+            { name: "IT", url: "it" }
+        ];
+
+        let currentGenres = { genre1: null, genre2: null };
+        let isSpinning = false;
+
+        function getRandomGenre() {
+            return genres[Math.floor(Math.random() * genres.length)];
+        }
+
+        function createConfetti() {
+            const confettiContainer = document.getElementById('confettiContainer');
+            confettiContainer.innerHTML = '';
+            
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confettiContainer.appendChild(confetti);
+            }
+            
+            // Remove confetti after animation
+            setTimeout(() => {
+                confettiContainer.innerHTML = '';
+            }, 2000);
+        }
+
+        function startSlotMachine() {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            const btn = document.getElementById('generateBtn');
+            const genre1Display = document.getElementById('genre1Display');
+            const genre2Display = document.getElementById('genre2Display');
+            
+            // Disable button and make boxes inactive
+            btn.disabled = true;
+            btn.textContent = 'SPINNING...';
+            genre1Display.classList.add('inactive');
+            genre2Display.classList.add('inactive');
+            genre1Display.href = '#';
+            genre2Display.href = '#';
+            
+            // Add spinning class
+            genre1Display.classList.add('slot-spinning');
+            genre2Display.classList.add('slot-spinning');
+            
+            // Slot machine animation duration
+            const spinDuration = 2000; // 2 seconds
+            const spinSpeed = 100; // Change genre every 100ms
+            
+            let spinCount = 0;
+            const maxSpins = spinDuration / spinSpeed;
+            
+            const spinInterval = setInterval(() => {
+                genre1Display.textContent = getRandomGenre().name;
+                genre2Display.textContent = getRandomGenre().name;
+                spinCount++;
+                
+                if (spinCount >= maxSpins) {
+                    clearInterval(spinInterval);
+                    finishSpin();
+                }
+            }, spinSpeed);
+        }
+
+        function finishSpin() {
+            const genre1Display = document.getElementById('genre1Display');
+            const genre2Display = document.getElementById('genre2Display');
+            const btn = document.getElementById('generateBtn');
+            
+            // Get final genres (ensure they're different)
+            const shuffled = [...genres].sort(() => 0.5 - Math.random());
+            currentGenres.genre1 = shuffled[0];
+            currentGenres.genre2 = shuffled[1];
+            
+            // Remove spinning animation
+            genre1Display.classList.remove('slot-spinning');
+            genre2Display.classList.remove('slot-spinning');
+            
+            // Set final genres and make them clickable
+            genre1Display.textContent = currentGenres.genre1.name;
+            genre2Display.textContent = currentGenres.genre2.name;
+            genre1Display.href = `https://rateyourmusic.com/genre/${currentGenres.genre1.url}`;
+            genre2Display.href = `https://rateyourmusic.com/genre/${currentGenres.genre2.url}`;
+            genre1Display.target = '_blank';
+            genre2Display.target = '_blank';
+            
+            // Make boxes active (clickable)
+            genre1Display.classList.remove('inactive');
+            genre2Display.classList.remove('inactive');
+            
+            // CONFETTI BURST!
+            createConfetti();
+            
+            // Re-enable button
+            btn.disabled = false;
+            btn.textContent = 'SPIN AGAIN';
+            isSpinning = false;
+        }
+
+        // Initialize with question marks
+        window.addEventListener('load', () => {
+            const genre1Display = document.getElementById('genre1Display');
+            const genre2Display = document.getElementById('genre2Display');
+            genre1Display.textContent = '???';
+            genre2Display.textContent = '???';
+            genre1Display.classList.add('inactive');
+            genre2Display.classList.add('inactive');
+        });
+    </script>
+</body>
+</html>
